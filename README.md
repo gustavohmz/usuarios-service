@@ -26,6 +26,29 @@ This microservice follows a layered architecture with clear separation of concer
 - Dockerized for consistent environment setup.
 
 ---
+### ⚙️ Prerequisites
+
+- ✅ Install **Docker Desktop**: [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
+- ✅ Make sure Docker Daemon is running.
+
+## ▶️ How to Run
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/gustavohmz/usuarios-service.git
+cd usuarios-service
+```
+
+### Run with Docker
+
+```bash
+docker-compose up --build
+```
+
+Access the API: [http://localhost:8080/api/clients](http://localhost:8080/api/clients)
+
+---
 
 ## 🔍 API Endpoints
 
@@ -84,11 +107,6 @@ Custom error messages and HTTP status codes are handled by `GlobalExceptionHandl
 ---
 
 ## 🐳 Dockerized Setup
-
-### ⚙️ Prerequisites
-
-- ✅ Install **Docker Desktop**: [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
-- ✅ Make sure Docker Daemon is running.
 
 ### 🧱 Dockerfile
 
@@ -166,25 +184,6 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 ```
-
----
-
-## ▶️ How to Run
-
-### Clone the Repository
-
-```bash
-git clone https://github.com/gustavohmz/usuarios-service.git
-cd usuarios-service
-```
-
-### Run with Docker
-
-```bash
-docker-compose up --build
-```
-
-Access the API: [http://localhost:8080/api/clients](http://localhost:8080/api/clients)
 
 ---
 
