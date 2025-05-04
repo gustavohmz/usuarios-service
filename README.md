@@ -23,7 +23,6 @@ This microservice follows a layered architecture with clear separation of concer
 - Field validation using annotations like `@NotBlank`, `@Min`, etc.
 - Custom exception handling (e.g., 404 for not found).
 - Unit tests with Mockito.
-- Integration tests using H2.
 - Dockerized for consistent environment setup.
 
 ---
@@ -66,12 +65,6 @@ This microservice follows a layered architecture with clear separation of concer
 - Uses `@Mock` and `@InjectMocks` with Mockito
 - Verifies business logic in isolation
 
-### Integration Tests
-
-- Located in `ClientControllerTest.java`
-- Uses Spring Boot test context and H2 database
-- Validates full API flow (HTTP → DB)
-
 Run tests:
 
 ```bash
@@ -92,25 +85,40 @@ Custom error messages and HTTP status codes are handled by `GlobalExceptionHandl
 
 ## 🐳 Dockerized Setup
 
-### Dockerfile
+### ⚙️ Prerequisites
+
+- ✅ Install **Docker Desktop**: [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
+- ✅ Make sure Docker Daemon is running.
+
+### 🧱 Dockerfile
 
 ```dockerfile
+# Usamos una imagen base con Java 17
 FROM openjdk:17-jdk-slim
+
+# Directorio dentro del contenedor
 WORKDIR /app
+
+# Copia el jar compilado al contenedor
 COPY target/usuarios-service-0.0.1-SNAPSHOT.jar app.jar
+
+# Expone el puerto
 EXPOSE 8080
+
+# Comando para ejecutar el microservicio
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
-### docker-compose.yml
+### 📦 docker-compose.yml
 
 ```yaml
 version: '3.8'
 
 services:
-  db:
+  postgres:
     image: postgres:16
     container_name: bank-db
+    restart: always
     environment:
       POSTGRES_DB: bank
       POSTGRES_USER: postgres
@@ -118,42 +126,65 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   app:
     build: .
-    container_name: bank-users-service
+    container_name: usuarios-service
+    depends_on:
+      - postgres
     ports:
       - "8080:8080"
-    depends_on:
-      - db
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/bank
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 4535
+    restart: on-failure
 
 volumes:
-  postgres-data:
+  postgres_data:
+```
+
+### 📄 application.yml
+
+```yaml
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/bank}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:4535}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: ${SERVER_PORT:8080}
 ```
 
 ---
 
-## ▶️ How to Run (Docker)
+## ▶️ How to Run
 
-1. Make sure Docker and Docker Compose are installed.
-2. Package the application:
+### Clone the Repository
 
 ```bash
-mvn clean package -DskipTests
+git clone https://github.com/gustavohmz/usuarios-service.git
+cd usuarios-service
 ```
 
-3. Build and start containers:
+### Run with Docker
 
 ```bash
 docker-compose up --build
 ```
 
-4. Access the application at [http://localhost:8080/api/clients](http://localhost:8080/api/clients)
+Access the API: [http://localhost:8080/api/clients](http://localhost:8080/api/clients)
 
 ---
 
@@ -180,7 +211,5 @@ src
 
 ## 👤 Author
 
-- **Name**: Gustavo hernandez
-- **GitHub**: [https://github.com/gustavohmz](https://github.com/your-profile)
-
----
+- **Name**: Gustavo Hernandez
+- **GitHub**: [https://github.com/gustavohmz](https://github.com/gustavohmz)
