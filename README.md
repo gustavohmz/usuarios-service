@@ -23,7 +23,8 @@ This microservice follows a layered architecture with clear separation of concer
 - Field validation using annotations like `@NotBlank`, `@Min`, etc.
 - Custom exception handling (e.g., 404 for not found).
 - Unit tests with Mockito.
-- Dockerized for consistent environment setup.
+- Dockerized for consistent environment setup..
+- Integration with RabbitMQ for asynchronous communication.
 
 ---
 ### ⚙️ Prerequisites
@@ -135,10 +136,10 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16
-    container_name: bank-db
+    container_name: users-db
     restart: always
     environment:
-      POSTGRES_DB: bank
+      POSTGRES_DB: users_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 4535
     ports:
@@ -146,17 +147,34 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-users
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
   app:
     build: .
     container_name: usuarios-service
     depends_on:
       - postgres
+      - rabbitmq
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/users_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 4535
+
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     restart: on-failure
 
 volumes:
@@ -168,10 +186,16 @@ volumes:
 ```yaml
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/bank}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/users_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:4535}
     driver-class-name: org.postgresql.Driver
+
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
 
   jpa:
     hibernate:
